@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-steamcmd-rust
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: steamcmd-rust
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: steamcmd-rust
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: steamcmd-rust
+  template:
+    metadata:
+      labels:
+        app: steamcmd-rust
+    spec:
+      containers:
+      - name: steamcmd-rust
+        image: didstopia/rust-server:latest
+        resources:
+          limits:
+            cpu: "2"
+            memory: 12G
+          requests:
+            cpu: "1"
+            memory: 4G
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 28015 
+          name: udp
+          protocol: UDP
+        - containerPort: 28016
+          name: http2
+        volumeMounts:
+          - name: steamcmd-rust-disk
+            mountPath: /steamcmd/rust
+      volumes:
+      - name: steamcmd-rust-disk
+        persistentVolumeClaim:
+          claimName: steamcmd-rust-disk
